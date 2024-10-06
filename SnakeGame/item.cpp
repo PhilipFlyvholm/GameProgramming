@@ -1,29 +1,13 @@
-#include "position.h"
+#include "item.h"
 #include "ITUGames.h"
-class Item
-{
-private:
-    char character;
-    Position position;
 
-public:
-    Item(Position position, char character);
-    void render();
-    Position get_position();
-};
+Item::Item(Position& pos, char sym) : position(pos), character(sym) {}
 
-Item::Item(Position position, char character)
-{
-    this->position = position;
-    this->character = character;
-}
-
-void Item::render(){
+void Item::render() const {
     ITUGames::Console::GotoCoords(position.x, position.y);
     ITUGames::Console::RenderCharacter(character);
 }
 
-Position Item::get_position(){
+Position Item::get_position() {
     return position;
 }
-

@@ -1,6 +1,4 @@
-#ifndef ITEM_H
-#define ITEM_H
-
+#pragma once
 #include "position.h"
 
 class Item
@@ -10,9 +8,7 @@ private:
     Position position;
 
 public:
-    Item(Position position, char character);
-    void render();
+    Item(Position& position, char character);
+    void render() const;
     Position get_position();
 };
-
-#endif

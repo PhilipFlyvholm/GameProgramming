@@ -1,19 +1,43 @@
-// # ITU - Game Programming Utils
-// Simple library to test game programming concepts on console
-//
-// ## ITUGames.h
-// Tested on :
-// - win : cmd, PowerShell
-// - ubuntu : ? ? ?
-// - ios : ? ? ?
-// Namespaces
-// - `Console` contains simple and portable(as much as possible) functions for console rendering, without using external dependencie
-// - `Utils` contains common gamedev utilities
-//
-// Known issues :
-// -`ITUGames: : Console` functions may not work properly in emulated terminals.
-// - Printing / clearing at high frequency(ie, in a loop at 60FPS) at the same terminal coordinates may cause some of the characters to skip rendering.adding `std::cout << std::flush; ` forces the terminal to print all the characters before moving forward.
-
+/*
+ * ITUGames.h
+ * Library for simple for console rendering and input utils.
+ *
+ * Supported terminals:
+ * - win: cmd, PowerShell
+ * - mac: ???
+ * Namespaces
+ * - `Console` contains simple and portable (as much as possible) functions for console rendering, without using external dependencie
+ * - `Utils` contains common gamedev utilities
+ *
+ * Known issues:
+ * - `ITUGames::Console` functions may not work properly in emulated terminals.
+ * - Printing/clearing at high frequency (ie, in a loop at 60FPS) at the same terminal coordinates may cause some of the characters to skip rendering. adding `std::cout << std::flush;` forces the terminal to print all the characters before moving forward.
+ *
+ * author: Chris-Carvelli
+ *
+ *
+ * MIT License
+ *
+ * Copyright (c) 2023 Chris
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 #pragma once
 
@@ -100,7 +124,7 @@ namespace ITUGames
 			{
 				return 0;
 			}
-			
+
 			return getch();
 		}
 
@@ -231,7 +255,7 @@ namespace ITUGames
 			char ch;
 			char buffer[SIZE];
 			int i = 0;
-			
+
 			// currect cursor position
 			int x, y;
 
@@ -240,7 +264,7 @@ namespace ITUGames
 
 			//printf("\033[2J");         //clear screen
 			printf("%c[9999;9999H", ESC); // cursor should move as far as it can
-			
+
 			if (!GetCursorPosition(rows, cols))
 				return false;
 
@@ -279,7 +303,7 @@ namespace ITUGames
 
 		// leave a clean (ish) environment after execution
 #ifdef _WIN32
-		BOOL WINAPI CleanupHandler(DWORD fdwCtrlType) {
+		inline BOOL WINAPI CleanupHandler(DWORD fdwCtrlType) {
 			if (fdwCtrlType == CTRL_SHUTDOWN_EVENT)
 			{
 				int h = GetTerminalHeight();
@@ -299,9 +323,8 @@ namespace ITUGames
 #endif
 
 		inline void InitScreenForRendering() {
-			/*int h = GetTerminalHeight();
-			printf("\033[%dT\033[30T", h);*/
 			ClearScreen();
+			GotoTop();
 
 #ifdef _WIN32
 			if (!SetConsoleCtrlHandler(CleanupHandler, TRUE))

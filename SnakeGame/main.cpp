@@ -7,6 +7,8 @@
 #include "position.h"
 #include "player.h"
 #include "item.h"
+#include <string>
+#include <algorithm>
 
 void Render();
 void Update();
@@ -21,115 +23,119 @@ std::chrono::duration<double> time_elapsed;
 std::chrono::duration<double> frame_time;
 int itr;
 std::vector<Position> to_be_cleared;
-std::vector<Item> items;
+std::vector<std::shared_ptr<Item>> items;
 const int TARGET_FPS = 60;
 constexpr double TARGET_TIME_ELAPSED = 1.0 / TARGET_FPS;
-
 
 #pragma endregion // Engine State
 
 #pragma region Game State
 
-/**
- * If you are unsure how to organize the additional variables you will need for the exercise, just dump them here.We will address this in future lectures
- * In the meantime, a good approach is to sort them and put the ones that relate to the same thing together
- * - is this variable part of the game? Of the engine? ...
- * - is it about input? Player state? Logging? ...
- * And so on. Are some of those questions conflicting with each other? Yep, architecturing code is hard, but we'll get a hang of it.
- */
-
 Player player(6, 5, to_be_cleared);
 
 #pragma endregion // Game State
 
-
-int getRandomInt(int min, int max){
-	return (rand() % (max - min + 1)) + min;
+int getRandomInt(int min, int max) {
+    return min + (rand() % (max - min + 1));
 }
 
 int main()
 {
-	// setup
-	std::srand(std::time(nullptr)); // initializes random generator
-	itr = 0;
-	ITUGames::Console::ClearScreen();
-	ITUGames::Console::HideCursor();
-	items.push_back(Item({10, 5}, 'X'));
-	while (true)
-	{
-		frame_time = std::chrono::steady_clock::now() - time_start;
-		time_start = std::chrono::steady_clock::now();
+    // setup
+    std::srand(static_cast<unsigned int>(std::time(nullptr))); // initializes random generator
+    itr = 0;
+    time_start = std::chrono::steady_clock::now();
+    ITUGames::Console::ClearScreen();
+    ITUGames::Console::HideCursor();
+    // Initial item
+    items.clear();
+    items.shrink_to_fit();
+    std::cout << "Size: " << items.size() << ", Capacity: " << items.capacity() << std::endl;
+    items.push_back(std::make_shared<Item>(Position{ 10, 5 }, 'X'));
+    std::cout << "Size: " << items.size() << ", Capacity: " << items.capacity() << std::endl;
 
-		ProcessEvents();
-		Update();
-		Render();
-		time_end = std::chrono::steady_clock::now();
-		time_elapsed = time_end - time_start;
-		ITUGames::Utils::PreciseSleep(std::chrono::duration<double>(TARGET_TIME_ELAPSED - time_elapsed.count()));
-	}
-	return 0;
+    while (true)
+    {
+        time_start = std::chrono::steady_clock::now();
+
+        ProcessEvents();
+        Update();
+        Render();
+
+        time_end = std::chrono::steady_clock::now();
+        time_elapsed = time_end - time_start;
+
+        double sleep_duration = TARGET_TIME_ELAPSED - time_elapsed.count();
+        if (sleep_duration > 0) {
+            ITUGames::Utils::PreciseSleep(std::chrono::duration<double>(sleep_duration));
+        }
+
+        frame_time = std::chrono::steady_clock::now() - time_start;
+    }
+    return 0;
 }
 
 void ProcessEvents()
 {
-	char c = ITUGames::Console::GetCharacter(false);
-	player.process_key_press(c);
-	int hits = 0;
-	for (auto it = items.begin(); it != items.end();)
-	{
-		Item item = *it;
-		bool collide = player.check_collide(item.get_position());
-		if (collide)
-		{
-			it = items.erase(it);
-			hits++;
-			player.addBody();
-		}
-		else
-		{
-			++it; // Move to the next element if no erasure occurs
-		}
-	}
-	for (int i = 0; i < hits; i++)
-	{
-		int x = getRandomInt(0, CONSOLE_WIDTH);
-		int y = getRandomInt(4, CONSOLE_HEIGHT);
-		items.push_back(Item({x,y}, 'X'));
-	}
+    try {
+        char c = ITUGames::Console::GetCharacter(false);
+        player.process_key_press(c);
+
+        // Use indices instead of iterators for more controlled removal
+        std::vector<size_t> to_remove;
+        for (size_t i = 0; i < items.size(); ++i) {
+			Item item = *items[i];
+            if (player.check_collide(item.get_position())) {
+                to_remove.push_back(i);
+            }
+        }
+
+        // Remove items and add new ones
+        for (auto it = to_remove.rbegin(); it != to_remove.rend(); ++it) {
+            if (*it < items.size()) {  // Safety check
+                items.erase(items.begin() + *it);
+                player.addBody();
+
+                // Add new item with bounds checking
+                int x = getRandomInt(0, CONSOLE_WIDTH);
+                int y = getRandomInt(4, CONSOLE_HEIGHT);
+                items.push_back(std::make_shared<Item>(Position{ x,y }, 'X'));
+            }
+        }
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error in ProcessEvents: " << e.what() << std::endl;
+    }
 }
 
 void Update()
 {
-	itr++;
-	player.update();
+    itr++;
+    player.update();
 }
 
 void Render()
 {
-	ITUGames::Console::GotoCoords(0, 1);
-	ITUGames::Console::ClearLine();
-	ITUGames::Console::PrintStr("Elapsed (ms): " + std::to_string(frame_time.count() * 1000.0));
-	ITUGames::Console::GotoCoords(0, 2);
-	ITUGames::Console::ClearLine();
-	ITUGames::Console::PrintStr("FPS:     " + std::to_string(1 / frame_time.count()));
-	ITUGames::Console::GotoCoords(0, 3);
-	ITUGames::Console::ClearLine();
-	ITUGames::Console::PrintStr("Itr:     " + std::to_string(itr));
-	
-	for (int i = 0; i < to_be_cleared.size(); i++)
-	{
-		Position clearPos = to_be_cleared.at(i);
-		ITUGames::Console::GotoCoords(clearPos.x, clearPos.y);
-		ITUGames::Console::RenderCharacter(' ');
-	}
-	to_be_cleared.clear();
+    ITUGames::Console::GotoCoords(0, 1);
+    ITUGames::Console::ClearLine();
+    ITUGames::Console::PrintStr("Elapsed (ms): " + std::to_string(frame_time.count() * 1000.0));
+    ITUGames::Console::GotoCoords(0, 2);
+    ITUGames::Console::ClearLine();
+    ITUGames::Console::PrintStr("FPS:     " + std::to_string(1 / frame_time.count()));
+    ITUGames::Console::GotoCoords(0, 3);
+    ITUGames::Console::ClearLine();
+    ITUGames::Console::PrintStr("Itr:     " + std::to_string(itr));
 
-	for (int i = 0; i < items.size(); i++)
-	{
-		Item item = items.at(i);
-		item.render();
-	}
+    for (const auto& clearPos : to_be_cleared) {
+        ITUGames::Console::GotoCoords(clearPos.x, clearPos.y);
+        ITUGames::Console::RenderCharacter(' ');
+    }
+    to_be_cleared.clear();
 
-	player.render();
-	ITUGames::Console::GotoCoords(CONSOLE_WIDTH, CONSOLE_HEIGHT);
+    for (const auto& item : items) {
+        (*item).render();
+    }
+
+    player.render();
+    ITUGames::Console::GotoCoords(CONSOLE_WIDTH - 1, CONSOLE_HEIGHT - 1);
 }
