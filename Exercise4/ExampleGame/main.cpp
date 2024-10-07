@@ -27,7 +27,7 @@ int main() {
 	renderer.init();
 	camera.setWindowCoordinates();
 
-	atlas = sre::SpriteAtlas::create("data/snake.json", "data/snake.png");
+	atlas = sre::SpriteAtlas::create("data/asteroids.json", "data/asteroids.png");
 
 	auto gameObject = engine.CreateGameObject("GameObject");
 	auto componentController = std::shared_ptr<ExampleGame::ComponentController>(new ExampleGame::ComponentController());
@@ -35,14 +35,16 @@ int main() {
 	gameObject->AddComponent(componentController);
 	gameObject->AddComponent(componentRenderer);
 
-	componentRenderer->sprite = atlas->get("berry.png");
+	componentRenderer->sprite = atlas->get("playerShip1_blue.png");
 
 	engine.Init();
 
 	renderer.startEventLoop();
 }
 
-void ProcessEvents(SDL_Event& event) { }
+void ProcessEvents(SDL_Event& event) {
+	engine.ProcessEvents(event);	
+}
 
 void Update(float deltaTime) {
 	engine.Update(deltaTime);
