@@ -42,6 +42,13 @@ namespace MyEngine {
 
 	void GameObject::AddChild(std::shared_ptr<GameObject> p_object) {
 		_children.push_back(p_object);
+		p_object->_parent = _self;
+	}
+
+	void GameObject::RemoveChild(std::shared_ptr<GameObject> p_object) {
+		auto it = std::find(_children.begin(), _children.end(), p_object);
+		if (it != _children.end())
+			_children.erase(it);
 	}
 
 	void GameObject::AddComponent(std::shared_ptr<Component> p_component) {

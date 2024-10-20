@@ -3,13 +3,16 @@
 
 #include "Engine/MyEngine.h"
 
-#include "Game/ComponentController.h"
+#include "Game/PlayerController.h"
+#include "Game/AsteroidController.h"
 #include "Game/ComponentRendererSprite.h"
 
 void InitGame();
 void ProcessEvents(SDL_Event& event);
 void Update(float deltaTime);
 void Render();
+void spawnPlayer();
+void spawnAsteroid();
 
 MyEngine::Engine engine;
 
@@ -28,18 +31,33 @@ int main() {
 	camera.setWindowCoordinates();
 
 	atlas = sre::SpriteAtlas::create("data/asteroids.json", "data/asteroids.png");
+	spawnPlayer();
+	for (int i = 5; i > 0; i--)
+	{
+		spawnAsteroid();
+	}
+	engine.Init();
+	
+	renderer.startEventLoop();
+}
 
-	auto gameObject = engine.CreateGameObject("GameObject");
-	auto componentController = std::shared_ptr<ExampleGame::ComponentController>(new ExampleGame::ComponentController());
+void spawnPlayer() {
+	auto gameObject = engine.CreateGameObject("Player");
+	auto playerController = std::shared_ptr<ExampleGame::PlayerController>(new ExampleGame::PlayerController(atlas));
 	auto componentRenderer = std::make_shared<ExampleGame::ComponentRendererSprite>();
-	gameObject->AddComponent(componentController);
+	gameObject->AddComponent(playerController);
 	gameObject->AddComponent(componentRenderer);
 
 	componentRenderer->sprite = atlas->get("playerShip1_blue.png");
+}
 
-	engine.Init();
-
-	renderer.startEventLoop();
+void spawnAsteroid() {
+	auto gameObject = engine.CreateGameObject("Asteroid");
+	auto controller = std::shared_ptr<ExampleGame::AsteroidController>(new ExampleGame::AsteroidController());
+	auto componentRenderer = std::make_shared<ExampleGame::ComponentRendererSprite>();
+	gameObject->AddComponent(controller);
+	gameObject->AddComponent(componentRenderer);
+	componentRenderer->sprite = atlas->get("Meteors/meteorBrown_big1.png");
 }
 
 void ProcessEvents(SDL_Event& event) {

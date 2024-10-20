@@ -24,6 +24,7 @@ namespace MyEngine {
 
 		void AddChild(std::shared_ptr<GameObject>);
 		void AddComponent(std::shared_ptr<Component>);
+		void RemoveChild(std::shared_ptr<GameObject>);
 
 		std::string GetName();
 		void SetName(std::string);
