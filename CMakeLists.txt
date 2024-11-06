@@ -132,4 +132,5 @@ mark_as_advanced(
 add_subdirectory(SnakeGame)
 add_subdirectory(Exercise4)
 add_subdirectory(Exercise6)
+add_subdirectory(Exercise8)
 add_subdirectory(game-programming-exam)
